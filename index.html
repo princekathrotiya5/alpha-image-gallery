@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Gallery Explorer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .gallery-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            gap: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.8rem 1.5rem;
+            background-color: #fff;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-btn:hover {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .tab-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .gallery-section {
+            display: none;
+        }
+
+        .gallery-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            aspect-ratio: 4/3;
+            background-color: #fff;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.5s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .gallery-nav {
+            display: flex;
+            justify-content: space-between;
+            margin: 2rem 0;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .nav-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            border-radius: 5px;
+        }
+
+        .modal-nav {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            transform: translateY(-50%);
+            padding: 0 1rem;
+        }
+
+        .modal-nav-btn {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #3498db;
+        }
+
+        .caption {
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            font-size: 1.2rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem;
+            }
+            
+            .modal-content {
+                max-width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Alpha Image Gallery </h1>
+        <p class="subtitle">Discover stunning images from various categories</p>
+    </header>
+
+    <div class="gallery-container">
+        <div class="category-tabs">
+            <button class="tab-btn active" data-category="nature">Nature</button>
+            <button class="tab-btn" data-category="birds">Birds</button>
+            <button class="tab-btn" data-category="animals">Animals</button>
+            <button class="tab-btn" data-category="moon">Moon</button>
+        </div>
+
+        <!-- Nature Gallery -->
+        <div class="gallery-section active" id="nature">
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="download (2).jpg" alt="Majestic mountain range at sunrise with golden light illuminating snowy peaks">
+                </div>
+                <div class="gallery-item">
+                    <img src="download (1).jpg" alt="Turquoise waterfall cascading into a crystal clear pool surrounded by lush green ferns">
+                </div>
+                <div class="gallery-item">
+                    <img src="download (3).jpg" alt="Autumn forest path covered with golden leaves, sunlight filtering through colorful foliage">
+                </div>
+                <div class="gallery-item">
+                    <img src="images (7).jpg" alt="Serene lake at dusk with mirror-like surface reflecting purple and pink sunset clouds">
+                </div>
+                <div class="gallery-item">
+                    <img src="download (4).jpg" alt="Tropical beach with palm trees, white sand, and turquoise waves under clear blue sky">
+                </div>
+                <div class="gallery-item">
+                    <img src="download (5).jpg" alt="Desert landscape with dramatic sand dunes creating wave-like patterns under golden sunlight">
+                </div>
+                <div class="gallery-item">
+                    <img src="download (11).jpg" alt="Desert landscape with dramatic sand dunes creating wave-like patterns under golden sunlight">
+                </div>
+                <div class="gallery-item">
+                    <img src="download.jpg" alt="Desert landscape with dramatic sand dunes creating wave-like patterns under golden sunlight">
+                </div>
+            </div>
+            <div class="gallery-nav">
+                <button class="nav-btn" id="nature-prev">Previous</button>
+                <button class="nav-btn" id="nature-next">Next</button>
+            </div>
+        </div>
+
+        <!-- Birds Gallery -->
+        <div class="gallery-section" id="birds">
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="240_F_86566504_1yU5DuXgM97XOXkZwcsSAvjP9EXtB4v2.jpg" alt="Colorful peacock displaying its vibrant feathers with intricate eye patterns">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_235001454_IVt1s6pz2jY5UINPL4fhfTVxvo6ibo9k.jpg" alt="Eagle in mid-flight with wings fully spread against a cloudy sky backdrop">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_243675911_EsvABLUWeCeY7Xxftnfd9Vcjyz68m3Jq.jpg" alt="Hummingbird hovering near bright red flowers with blurred green background">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_300843293_PCuXxVbIoIFuLjtcXX0vuyhNIMz1hLOx.jpg" alt="Owl perched on a tree branch with intense yellow eyes glowing in moonlight">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_361717411_zfZLsEMNcAB7Msq0XbXStAuoVZjpVgHL.jpg" alt="Flamingos standing in shallow water creating beautiful pink reflections at sunset">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_366559814_jsI6Iz7vx8xiWvJg6L3p9sBCS2QB1bDa.jpg" alt="Puffin with colorful beak standing on cliff edge overlooking ocean waves">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_316231782_6f8AyYcXlpC2hIAwypDyBwcQyHxbisUe.jpg" alt="Puffin with colorful beak standing on cliff edge overlooking ocean waves">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_420561537_1UVxzZElus6vzGuvAmvT1gwfpRRGehzV.jpg" alt="Puffin with colorful beak standing on cliff edge overlooking ocean waves">
+                </div>
+            </div>
+            <div class="gallery-nav">
+                <button class="nav-btn" id="birds-prev">Previous</button>
+                <button class="nav-btn" id="birds-next">Next</button>
+            </div>
+        </div>
+
+        <!-- Animals Gallery -->
+        <div class="gallery-section" id="animals">
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="images.jpg" >
+                </div>
+                <div class="gallery-item">
+                    <img src="pexels-photo-247376 (1).jpeg" >
+                </div>
+                <div class="gallery-item">
+                    <img src="images (6).jpg" >
+                </div>
+                <div class="gallery-item">
+                    <img src="images (3).jpg" >
+                </div>
+                <div class="gallery-item">
+                    <img src="download (12).jpg" >
+                </div>
+                <div class="gallery-item">
+                    <img src="images (4).jpg" >
+                </div>
+                <div class="gallery-item">
+                    <img src="images (2).jpg" >
+                </div>
+                <div class="gallery-item">
+                    <img src="images (5).jpg" >
+                </div>
+            </div>
+            <div class="gallery-nav">
+                <button class="nav-btn" id="animals-prev">Previous</button>
+                <button class="nav-btn" id="animals-next">Next</button>
+            </div>
+        </div>
+
+        <!-- Moon Gallery -->
+        <div class="gallery-section" id="moon">
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="240_F_785572526_8p4beBzbWMzKPOXFpzmjXbPGSG5cjeHf.jpg" alt="Full moon rising over dark silhouette of mountains with starry sky background">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_1455691180_bTJpJVhlWdVuVlVun5tFks5EbBsawxui.jpg" alt="Crescent moon partially obscured by wispy clouds with dramatic lighting">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_1155983708_DVV9eZPnfbr51v5p1QPzTtDaco30eujU.jpg" alt="Lunar eclipse showing red moon surrounded by glowing corona in dark sky">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_715479436_y3lZuSmqsIrd7UN8GgM0SAHR1gmYZHHl.jpg" alt="Moon surface with craters in sharp detail under bright natural lighting">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_814963434_hs2LcNtubpDGo2aFUN8vinLGxQxPcntA.jpg" alt="Blue moon phenomenon with celestial glow over calm ocean horizon">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_1163525771_im3EVqBITaby2HEg34vnZitXyrKz1cpn.jpg" alt="Super moon appearing enormous behind city skyline with golden illumination">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_1183637485_nFfxL8WtGpkQOgwADi81hou2qlXkiUmi.jpg" alt="Super moon appearing enormous behind city skyline with golden illumination">
+                </div>
+                <div class="gallery-item">
+                    <img src="240_F_1213460583_9mBM5XpebnInlrnf7wXaZLQgQVAjA0TW.jpg" alt="Super moon appearing enormous behind city skyline with golden illumination">
+                </div>
+
+            </div>
+            <div class="gallery-nav">
+                <button class="nav-btn" id="moon-prev">Previous</button>
+                <button class="nav-btn" id="moon-next">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="gallery-modal">
+        <span class="close-btn">&times;</span>
+        <div class="modal-content">
+            <img id="modal-image" src="" alt="">
+            <p class="caption" id="modal-caption"></p>
+            <div class="modal-nav">
+                <button class="modal-nav-btn" id="modal-prev"><</button>
+                <button class="modal-nav-btn" id="modal-next">></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching functionality
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const gallerySections = document.querySelectorAll('.gallery-section');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const category = this.dataset.category;
+                    
+                    // Update active tab
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update current gallery and reset index when switching
+                    gallerySections.forEach(section => section.classList.remove('active'));
+                    document.getElementById(category).classList.add('active');
+                    currentGallery = category;
+                    currentIndex = 0;
+                });
+            });
+
+            // Modal functionality
+            const modal = document.getElementById('gallery-modal');
+            const modalImg = document.getElementById('modal-image');
+            const modalCaption = document.getElementById('modal-caption');
+            const closeBtn = document.querySelector('.close-btn');
+            const galleryItems = document.querySelectorAll('.gallery-item img');
+            
+            let currentGallery = 'nature';
+            let currentIndex = 0;
+            let currentImages = [];
+
+            // Open modal with clicked image
+            galleryItems.forEach((img, index) => {
+                img.addEventListener('click', function() {
+                    const gallerySection = this.closest('.gallery-section');
+                    currentGallery = gallerySection.id;
+                    
+                    // Get all images in current gallery
+                    currentImages = Array.from(gallerySection.querySelectorAll('.gallery-item img'));
+                    currentIndex = currentImages.indexOf(this);
+                    
+                    // Update modal content
+                    modal.style.display = 'flex';
+                    modalImg.src = this.src;
+                    modalImg.alt = this.alt;
+                    modalCaption.textContent = this.alt;
+                });
+            });
+
+            // Close modal
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+
+            // Modal navigation
+            const modalPrev = document.getElementById('modal-prev');
+            const modalNext = document.getElementById('modal-next');
+            
+            modalPrev.addEventListener('click', function() {
+                currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+                updateModalImage();
+            });
+            
+            modalNext.addEventListener('click', function() {
+                currentIndex = (currentIndex + 1) % currentImages.length;
+                updateModalImage();
+            });
+            
+            function updateModalImage() {
+                if (currentImages && currentImages.length > 0) {
+                    const img = currentImages[currentIndex];
+                    modalImg.src = img.src;
+                    modalImg.alt = img.alt;
+                    modalCaption.textContent = img.alt;
+                }
+            }
+
+            // Close modal when clicking outside the image
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // Gallery navigation buttons and section switching
+            const categories = ['nature', 'birds', 'animals', 'moon'];
+            
+            function navigateGallery(direction) {
+                const currentIndex = categories.indexOf(currentGallery);
+                let nextIndex;
+                
+                if (direction === 'next') {
+                    nextIndex = (currentIndex + 1) % categories.length;
+                } else {
+                    nextIndex = (currentIndex - 1 + categories.length) % categories.length;
+                }
+                
+                const nextGallery = categories[nextIndex];
+                
+                // Switch tab and gallery
+                document.querySelector(`.tab-btn[data-category="${nextGallery}"]`).click();
+                
+                // Reset scroll position
+                const galleryGrid = document.getElementById(nextGallery).querySelector('.gallery-grid');
+                galleryGrid.scrollTo({ left: 0, behavior: 'smooth' });
+            }
+
+            // Add event listeners for all gallery navigation buttons
+            document.querySelectorAll('.gallery-nav .nav-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const direction = this.id.includes('prev') ? 'prev' : 'next';
+                    navigateGallery(direction);
+                });
+            });
+
+            // Update modal navigation to work across all sections
+            modalPrev.addEventListener('click', function() {
+                if (currentIndex === 0) {
+                    // First image - go to previous section's last image
+                    navigateGallery('prev');
+                    setTimeout(() => {
+                        currentImages = document.querySelector(`#${currentGallery} .gallery-item img`);
+                        currentIndex = currentImages.length - 1;
+                        updateModalImage();
+                    }, 100);
+                } else {
+                    currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+                    updateModalImage();
+                }
+            });
+            
+            modalNext.addEventListener('click', function() {
+                if (currentIndex === currentImages.length - 1) {
+                    // Last image - go to next section's first image
+                    navigateGallery('next');
+                    setTimeout(() => {
+                        currentImages = document.querySelector(`#${currentGallery} .gallery-item img`);
+                        currentIndex = 0;
+                        updateModalImage();
+                    }, 100);
+                } else {
+                    currentIndex = (currentIndex + 1) % currentImages.length;
+                    updateModalImage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
